@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ultralims.fullname" . }}
+  labels:
+    {{- include "ultralims.labels" . | nindent 4 }}
+data:  
+  {{- with .Values.config }}
+  name_server: {{ .name_server }}
+  empresa_server: {{ .empresa_server | quote}}
+  protocol_server: {{ .protocol_server }}
+  {{- end }}
+immutable: false

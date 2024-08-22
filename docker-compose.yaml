@@ -1,0 +1,17 @@
+services:
+  ultralims:
+    image: ultralims:latest
+    volumes:
+      - ./empresas/:/var/www/html/empresas/
+    environment:
+      - name_server=${name_server}
+      - empresa_server=${empresa_server}
+      - db_server=${db_server}
+      - host_server=${host_server}
+      - port_server=${port_server}
+      - user_server=${user_server}
+      - password_server=${password_server}
+      - protocol_server=${protocol_server}
+    ports:
+      - "80:80"
+      - "443:443"
