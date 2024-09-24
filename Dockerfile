@@ -1,36 +1,122 @@
-# Estágio 1: Base para PhantomJS e Certificados
-# FROM php:8.2-alpine AS cacert
-
-# RUN apk add --no-cache wget \
-#    && wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 \
-#    && tar xvjf phantomjs-2.1.1-linux-x86_64.tar.bz2 -C /usr/local/share/ \
-#    && ln -sf /usr/local/share/phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs \
-#    && rm -rf phantomjs-2.1.1-linux-x86_64.tar.bz2
+ARG PHP_VERSION=7.4
+ARG PHANTOMJS_VERSION=2.1.1
 
 
-FROM php:7.4-apache AS php-base
+# PhantomJS
+FROM docker.io/library/alpine AS phantomjs
+
+ARG PHANTOMJS_VERSION
+
+WORKDIR /tmp
+
+RUN apk add --no-cache wget && \
+    wget -qO- https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64.tar.bz2 | tar xvjf - && \
+    mv phantomjs-${PHANTOMJS_VERSION}-linux-x86_64 phantomjs
+
+
+# PHP comum para todos os stages
+ARG PHP_VERSION
+
+FROM docker.io/library/php:${PHP_VERSION}-apache-bullseye AS php-base
 
 ENV ACCEPT_EULA=Y
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
-   gnupg2 curl apt-transport-https \
-   && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
-   && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
-   && apt-get update \
-   && ACCEPT_EULA=Y apt-get -y --no-install-recommends install \
-   msodbcsql17 unixodbc-dev \
-   libmcrypt-dev libfontconfig1-dev libgd-dev libfreetype6-dev libjpeg62-turbo-dev \
-   libcurl4-gnutls-dev libxml2-dev libzip-dev libonig-dev libmagickwand-dev \
-   file ghostscript git
+RUN apt-get update && \
+    # apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends --no-install-suggests \
+        gnupg2 \
+        curl \
+        apt-transport-https && \
+    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    curl -fsSL --output /etc/apt/sources.list.d/mssql-release.list \
+        https://packages.microsoft.com/config/debian/11/prod.list && \
+    # update with new SQL server repo data
+    apt-get update
 
-RUN pecl install mcrypt-1.0.5 imagick redis sqlsrv-5.10.0 pdo_sqlsrv-5.10.0 \
-   && docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg=/usr/local/lib \
-   && docker-php-ext-install gd curl xml zip mbstring mysqli pdo pdo_mysql fileinfo intl bcmath opcache \
-   && docker-php-ext-enable mysqli pdo pdo_mysql mcrypt gd curl xml zip fileinfo mbstring intl bcmath sqlsrv pdo_sqlsrv redis imagick \
-   && apt-get clean \
-   && rm -rf /var/lib/apt/lists/* /tmp/pear /usr/local/src/* /usr/share/man /usr/share/doc /usr/share/doc-base \
-   && find /var/cache -type f -exec rm -rf {} \; \
-   && find /var/log -type f -exec rm -rf {} \;
+#  PhantomJS - Isso entra na produção?
+COPY --from=phantomjs /tmp/phantomjs/ /usr/local/share/phantomjs/
+
+RUN ln -sf /usr/local/share/phantomjs/bin/phantomjs /usr/local/bin
+
+# https://groups.google.com/a/opencast.org/g/dev/c/0Ghsxe6Wvr0?pli=1
+# https://github.com/wch/webshot/issues/90
+ENV OPENSSL_CONF=blah
+
+
+# Build das extensões
+FROM php-base AS php-build-ext
+
+# PHP Extensions
+RUN apt-get install -y --no-install-recommends --no-install-suggests \
+        libcurl4-gnutls-dev \
+        # libgd-dev \
+        libxml2-dev \
+        libzip-dev \
+        libonig-dev \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev  \
+        libpng-dev && \
+    docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg && \
+    docker-php-ext-install gd curl xml zip mbstring mysqli pdo pdo_mysql fileinfo intl bcmath opcache && \
+    docker-php-ext-enable  gd curl xml zip mbstring mysqli pdo pdo_mysql fileinfo intl bcmath opcache 
+
+# PECL Extensions    
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends --no-install-suggests \
+        msodbcsql17 \
+        unixodbc-dev \
+        libmcrypt-dev \
+        libmagickwand-dev && \
+    # WARNING: channel "pecl.php.net" has updated its protocols, use "pecl channel-update pecl.php.net" to update
+    pecl channel-update pecl.php.net && \
+    pecl install \
+        mcrypt-1.0.5 \
+        imagick-3.7.0 \
+        redis-6.0.2 \
+        sqlsrv-5.10.0 \
+        pdo_sqlsrv-5.10.0 && \
+    docker-php-ext-enable sqlsrv pdo_sqlsrv redis imagick mcrypt
+
+
+# Composer
+COPY --from=docker.io/library/composer:2 /usr/bin/composer /usr/local/bin/composer
+
+# Instalação do código do backend
+
+
+# Stage: Yarn
+
+
+# Release do PHP, sem os headers
+FROM php-base AS php-release
+
+COPY --from=php-build-ext /usr/local/lib/php/extensions /usr/local/lib/php/extensions
+COPY --from=php-build-ext /usr/local/etc/php/conf.d /usr/local/etc/php/conf.d
+
+RUN apt-get install -y --no-install-recommends --no-install-suggests \
+        file \
+        ghostscript \
+        # git \
+        libfreetype6 \
+        libjpeg62-turbo  \
+        libmagickwand-6.q16-6 \
+        # libmagickcore-6.q16-6-extra \
+        libpng16-16 \
+        libmcrypt4 \        
+        msodbcsql17 \
+        unixodbc \
+        libzip4 && \
+        # zlib1g && \
+    apt-get autoremove && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN docker-php-ext-enable \
+        gd curl xml zip mbstring mysqli pdo pdo_mysql fileinfo intl bcmath opcache \
+        sqlsrv pdo_sqlsrv redis imagick mcrypt && \
+    # apt-get --purge autoremove autoconf gcc make
+    echo "<?php phpinfo(); ?>" > index.php
+
+
 
 # ## Configs
 # ADD docker/php7.conf/php.ini-development "$PHP_INI_DIR/php.ini"
@@ -41,9 +127,9 @@ RUN pecl install mcrypt-1.0.5 imagick redis sqlsrv-5.10.0 pdo_sqlsrv-5.10.0 \
 # ADD docker/php7.conf/security.conf "$APACHE_CONFDIR/sites-enabled/security.conf"
 # ADD docker/php7.conf/ssl.conf "$APACHE_CONFDIR/mods-available/ssl.conf"
 
-# COPY --from=cacert /usr/local/share/phantomjs-2.1.1-linux-x86_64/ /usr/local/share/phantomjs/
 
-# RUN ln -sf /usr/local/share/phantomjs/bin/phantomjs /usr/local/bin
+
+# 
 
 # HEALTHCHECK CMD curl --fail http://localhost/index.php || exit 1
 
@@ -90,6 +176,7 @@ RUN pecl install mcrypt-1.0.5 imagick redis sqlsrv-5.10.0 pdo_sqlsrv-5.10.0 \
 
 # RUN yarn install --production \
 #    && rm -rf /root/.cache/yarn
+
 
 # FROM php-base AS production
 
