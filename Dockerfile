@@ -40,7 +40,7 @@ RUN ln -sf /usr/local/share/phantomjs/bin/phantomjs /usr/local/bin
 
 # https://groups.google.com/a/opencast.org/g/dev/c/0Ghsxe6Wvr0?pli=1
 # https://github.com/wch/webshot/issues/90
-ENV OPENSSL_CONF=blah
+ENV OPENSSL_CONF=/usr/lib/ssl/openssl.cnf
 
 
 # Build das extensões
@@ -81,13 +81,35 @@ RUN apt-get update && \
 # Composer
 COPY --from=docker.io/library/composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# Instalação do código do backend
+# # Instalação do código do backend
+# WORKDIR /app
+
+# COPY composer.json composer.lock ./
+
+# ADD ./app/ ./app
+# ADD ./infra/ ./infra
+# ADD ./servicos/ ./servicos
+
+# RUN composer install --no-dev --no-scripts --no-interaction --optimize-autoloader \
+#    && rm -rf /root/.composer/cache/*
+
+# RUN openssl genrsa -out private.key 2048 \
+#    && openssl rsa -in private.key -pubout -out public.key 
 
 
-# Stage: Yarn
+# # Stage: Yarn
+# FROM node:18-alpine AS yarn-install
+
+# WORKDIR /app
+
+# VOLUME [ "/root/.cache" ]
+
+# COPY package.json yarn.lock ./
+
+# RUN yarn install --production 
 
 
-# Release do PHP, sem os headers
+# Stage release do PHP, sem os headers
 FROM php-base AS php-release
 
 COPY --from=php-build-ext /usr/local/lib/php/extensions /usr/local/lib/php/extensions
@@ -148,34 +170,7 @@ RUN docker-php-ext-enable \
 # ENV APACHE_RUN_GROUP=www-data
 
 
-# FROM php-base AS composer-install
 
-# COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
-
-# WORKDIR /app
-
-# COPY composer.json composer.lock ./
-
-# ADD ./app/ ./app
-# ADD ./infra/ ./infra
-# ADD ./servicos/ ./servicos
-
-# RUN composer install --no-dev --no-scripts --no-interaction --optimize-autoloader \
-#    && rm -rf /root/.composer/cache/*
-
-# RUN openssl genrsa -out private.key 2048 \
-#    && openssl rsa -in private.key -pubout -out public.key   
-
-
-# # Estágio 4: Instalação do Yarn
-# FROM node:18-alpine AS yarn-install
-
-# WORKDIR /app
-
-# COPY package.json yarn.lock ./
-
-# RUN yarn install --production \
-#    && rm -rf /root/.cache/yarn
 
 
 # FROM php-base AS production
