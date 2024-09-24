@@ -22,7 +22,7 @@ FROM docker.io/library/php:${PHP_VERSION}-apache-bullseye AS php-base
 ENV ACCEPT_EULA=Y
 
 RUN apt-get update && \
-    # apt-get upgrade -y && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
         gnupg2 \
         curl \
