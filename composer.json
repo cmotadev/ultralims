@@ -1,0 +1,55 @@
+{
+    "name": "ultralims/app",
+    "type": "project",
+    "require": {
+        "phpmailer/phpmailer": "5.2.16",
+        "phpoffice/phpspreadsheet": "1.8.2",
+        "league/geotools": "^0.7.0",
+        "setasign/fpdi": "^2.3",
+        "tecnickcom/tcpdf": "^6.6",
+        "picqer/php-barcode-generator": "^0.3.0",
+        "endroid/qr-code": "^2.5",
+        "masterminds/html5": "^2.8",
+        "cboden/ratchet": "^0.4.4",
+        "guzzlehttp/guzzle": "^6.5",
+        "php-di/php-di": "^5.4",
+        "monolog/monolog": "^1.27",
+        "slim/slim": "^3.12",
+        "firebase/php-jwt": "^6.0",
+        "doctrine/migrations": "^1.5",
+        "zircote/swagger-php": "^2.0",
+        "microsoft/microsoft-graph": "^1.12",
+        "league/oauth2-server": "6.1.1",
+        "mpdf/mpdf": "^8.2"
+    },
+    "authors": [
+        {
+            "name": "Gabriel Duarte",
+            "email": "gabriel.duarte@ultralims.com.br"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "UltraLIMS\\App\\": "src/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^5.7",
+        "squizlabs/php_codesniffer": "^3.7"
+    },
+    "scripts": {
+        "yarn": "yarn install",
+        "test": "phpunit tests",
+        "cs": "phpcs --standard=PSR12 ./app/servicos/",
+        "check": [
+            "@cs",
+            "@test"
+        ],
+        "prod": [
+            "composer install --no-dev",
+            "@yarn",
+            "composer dumpautoload -o",
+            "php database/automigrate.php"
+        ]
+    }
+}
