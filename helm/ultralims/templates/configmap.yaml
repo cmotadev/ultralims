@@ -7,7 +7,9 @@ metadata:
 data:  
   {{- with .Values.config }}
   name_server: {{ .name_server }}
-  empresa_server: {{ .empresa_server | quote}}
+  empresa_server: {{ .empresa_server | toString | quote }}
   protocol_server: {{ .protocol_server }}
+  URLIMPORTARESULTADO: {{ .importaResultado.url }}
   {{- end }}
-immutable: false
+  SESSION_HANDLER: redis
+  APACHE_PORT: {{ .Values.service.port | toString | quote }}

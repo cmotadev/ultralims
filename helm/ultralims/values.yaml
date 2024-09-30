@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: nginx
+  repository: ghcr.io/ultralims/ultralims/app
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -16,7 +16,7 @@ fullnameOverride: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
-  create: true
+  create: false
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
@@ -47,7 +47,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: &hostname ultralims.sgb-ultralims-homolg.apps.ocp.sgb.local
+    - host: ''
       paths:
         - path: /
           pathType: ImplementationSpecific
@@ -82,17 +82,36 @@ tolerations: []
 affinity: {}
 
 config:
-  name_server: *hostname
-  empresa_server: 1
+  name_server: ''
+  empresa_server: null
   protocol_server: http
 
-db:
-  driver: sqlsrv
-  host: wrnpdbmsh01.sgb.local
-  port: 1433
-  name: ULTRA_LIMS
-  user: ultralims
-  password: H01417_Z15!
+  db:
+    driver: sqlsrv
+    host: ''
+    port: 1433
+    name: ULTRA_LIMS
+    user: ultralims
+    password: ''
+
+  redis:
+    path: ''
+
+  jwt:
+    wizard: ''
+    secret: ''
+
+  importaResultado:
+    url: ''
+
+  azureAppSecret: ''
+
+pvc:
+  enabled: true
+  accessMode: ReadWriteMany
+  storage:
+    size: 10Gi
+    className: ""
 
 redis:
-  path: 'tcp://redis-server:6379'
+  architecture: standalone

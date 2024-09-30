@@ -1,3 +1,4 @@
+{{- if .Values.pvc.enabled -}}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -5,10 +6,13 @@ metadata:
   labels:
     {{- include "ultralims.labels" . | nindent 4 }}
 spec:
+  {{- with .Values.pvc }}
   accessModes:
-    - ReadWriteOnce
+    - {{ .accessMode }}
   resources:
     requests:
-      storage: 1Gi
-  storageClassName: thin-csi
+      storage: {{ .storage.size }}
+  storageClassName: {{ .storage.className }}
   volumeMode: Filesystem
+  {{- end -}}
+{{- end -}}
