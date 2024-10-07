@@ -13,3 +13,9 @@ data:
   {{- end }}
   SESSION_HANDLER: redis
   APACHE_PORT: {{ .Values.service.port | toString | quote }}
+  APACHE_LOG_DIR: "/tmp"
+  APACHE_PID_FILE: "/tmp/apache2.pid"
+  APACHE_RUN_GROUP: root
+  APACHE_LOCK_DIR: "/tmp"
+  APACHE_RUN_DIR: "/tmp"
+
