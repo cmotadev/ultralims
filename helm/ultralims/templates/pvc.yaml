@@ -12,7 +12,7 @@ spec:
   resources:
     requests:
       storage: {{ .storage.size }}
-  storageClassName: {{ .storage.className }}
+  storageClassName: {{ .storage.className | quote }}
   volumeMode: Filesystem
   {{- end -}}
 {{- end -}}
