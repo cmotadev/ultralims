@@ -1,5 +1,5 @@
 {{- $svcHost := include "ultralims.importaResultado.fullname" . -}}
-{{- $svcPort := .Values.importaResultado.service.port -}}
+{{- $svcPort := .Values.importaResultado.service.port | toString -}}
 {{- $importaResultado := printf "http://%s.%s.svc.cluster.local:%s" $svcHost .Release.Namespace $svcPort -}}
 apiVersion: v1
 kind: ConfigMap
