@@ -1,0 +1,39 @@
+ingress:
+  enabled: true
+  annotations:
+    haproxy.router.openshift.io/timeout: 900s
+  hosts:
+    - host: chartName.chartNamespace.apps-crc.testing
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+          
+pvc:
+  storage:
+    className: crc-csi-hostpath-provisioner
+
+config:
+  name_server: ''
+  empresa_server: null
+  protocol_server: http
+  db:
+    host: sqlserver.server.local
+    name: ULTRA_LIMS
+    user: ultralims
+    password: ultralims
+  redis:
+    path: ''
+  jwt:
+    wizard: ''
+    secret: ''
+  importaResultado:
+    url: ''
+  azureAppSecret: ''
+
+web:
+  imagePullSecrets:
+    - name: ultralims-github-registry    
+
+importaResultado:
+  imagePullSecrets:
+    - name: ultralims-github-registry
