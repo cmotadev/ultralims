@@ -117,21 +117,24 @@ web:
 redis:
   enabled: true
   architecture: standalone
-  # auth:
-    # password: ZUfOSnnDYc
+  auth:
+    password: ZUfOSnnDYc
   master:
     persistence:
       size: 5Gi
       # storageClass: thin-csi
+    service:
+      ports: 
+        redis: 6379
 
 importaResultado:
   replicaCount: 1
 
   image:
-    repository: ghcr.io/ultralims/ultralims/app
+    repository: ghcr.io/ultralims/ultralims/importa-resultados
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "1.11"
 
   imagePullSecrets: []
   nameOverride: ""
