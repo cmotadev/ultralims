@@ -1,4 +1,4 @@
-{{- if .Values.autoscaling.enabled }}
+{{- if .Values.web.autoscaling.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -10,23 +10,25 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ include "ultralims.fullname" . }}
-  minReplicas: {{ .Values.autoscaling.minReplicas }}
-  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  {{- with .Values.web.autoscaling }}
+  minReplicas: {{ .minReplicas }}
+  maxReplicas: {{ .maxReplicas }}
   metrics:
-    {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
+    {{- if .targetCPUUtilizationPercentage }}
     - type: Resource
       resource:
         name: cpu
         target:
-          averageUtilization: {{ .autoscaling.targetCPUUtilizationPercentage }}
+          averageUtilization: {{ .targetCPUUtilizationPercentage }}
           type: Utilization
     {{- end }}
-    {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- if .targetMemoryUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory        
         target:
-          averageUtilization: {{ .autoscaling.targetMemoryUtilizationPercentage }}
+          averageUtilization: {{ .targetMemoryUtilizationPercentage }}
           type: Utilization
     {{- end }}
+  {{- end }}
 {{- end }}

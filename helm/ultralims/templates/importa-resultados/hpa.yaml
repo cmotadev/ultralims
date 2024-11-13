@@ -1,0 +1,34 @@
+{{- if .Values.importaResultado.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "ultralims.importaResultado.fullname" . }}
+  labels:
+    {{- include "ultralims.importaResultado.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "ultralims.importaResultado.fullname" . }}
+  {{- with .Values.importaResultado.autoscaling }}
+  minReplicas: {{ .minReplicas }}
+  maxReplicas: {{ .maxReplicas }}
+  metrics:
+    {{- if .targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          averageUtilization: {{ .targetCPUUtilizationPercentage }}
+          type: Utilization
+    {{- end }}
+    {{- if .targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory        
+        target:
+          averageUtilization: {{ .targetMemoryUtilizationPercentage }}
+          type: Utilization
+    {{- end }}
+  {{- end }}
+{{- end }}

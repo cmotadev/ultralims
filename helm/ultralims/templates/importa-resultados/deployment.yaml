@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ultralims.importaResultado.fullname" . }}
+  labels:
+    {{- include "ultralims.importaResultado.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.importaResultado.autoscaling.enabled }}
+  replicas: {{ .Values.importaResultado.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ultralims.importaResultado.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.importaResultado.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ultralims.importaResultado.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.importaResultado.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ultralims.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.importaResultado.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-import
+          securityContext:
+            {{- toYaml .Values.importaResultado.securityContext | nindent 12 }}
+          image: "{{ .Values.importaResultado.image.repository }}:{{ .Values.importaResultado.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.importaResultado.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.importaResultado.service.port }}
+              protocol: TCP
+          env:
+            - name: APACHE_PORT 
+              value: {{ .Values.importaResultado.service.port | toString | quote }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "ultralims.fullname" . }}
+            - secretRef:
+                name: {{ include "ultralims.fullname" . }}
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {{- toYaml .Values.importaResultado.resources | nindent 12 }}
+      {{- with .Values.importaResultado.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.importaResultado.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.importaResultado.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
