@@ -44,7 +44,7 @@ spec:
             - configMapRef:
                 name: {{ include "ultralims.fullname" . }}
             - secretRef:
-                name: {{ include "ultralims.fullname" . }}
+                name: {{ include "ultralims.importaResultado.fullname" . }}
           # livenessProbe:
           #   httpGet:
           #     path: /
