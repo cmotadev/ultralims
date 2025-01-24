@@ -32,6 +32,12 @@ config:
   empresa_server: null
   protocol_server: http
 
+  oauth:
+    tokenID: 'ultraLims#$%&Ç'
+    tokenSecret: 'secret123456#$%&Ç'
+    tokenGrantType: 'client_credentials'
+    tokenScope: 'clientArea'
+
   db:
     driver: sqlsrv
     host: ''
@@ -140,7 +146,7 @@ importaResultado:
     repository: ghcr.io/ultralims/importa-resultados
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "1.10.002-sgb"
+    tag: "1.11.003"
 
   imagePullSecrets: []
   nameOverride: ""
@@ -187,3 +193,10 @@ importaResultado:
   tolerations: []
 
   affinity: {}
+
+sqlserver:
+  enabled: true
+  serviceAccount:
+    name: ultralims-database
+  image:
+    tag: 2019-latest
