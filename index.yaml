@@ -1,0 +1,23 @@
+apiVersion: v1
+entries:
+  ultralims:
+  - apiVersion: v2
+    appVersion: 3.05.026.012-sgb
+    created: "2025-01-24T13:48:05.941744393Z"
+    dependencies:
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 19.5.0
+    - condition: sqlserver.enabled
+      name: sqlserver
+      repository: https://nds-cprm.github.io/helm-charts
+      version: 0.1.0
+    description: A Helm chart for Kubernetes
+    digest: 4672c2111cabc47eb1c72b5f0dee339455a081802de9554b646b70e43db01f2f
+    name: ultralims
+    type: application
+    urls:
+    - https://github.com/cmotadev/ultralims/releases/download/ultralims-0.3.0/ultralims-0.3.0.tgz
+    version: 0.3.0
+generated: "2025-01-24T13:48:05.941758459Z"
