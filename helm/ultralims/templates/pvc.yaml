@@ -5,6 +5,8 @@ metadata:
   name: {{ include "ultralims.fullname" . }}-empresas
   labels:
     {{- include "ultralims.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep
 spec:
   {{- with .Values.pvc }}
   accessModes:
@@ -13,6 +15,9 @@ spec:
     requests:
       storage: {{ .storage.size }}
   storageClassName: {{ .storage.className | quote }}
+  {{- if .volumeName }}
+  volumeName: {{ .volumeName | quote }}
+  {{- end }}
   volumeMode: Filesystem
   {{- end -}}
 {{- end -}}

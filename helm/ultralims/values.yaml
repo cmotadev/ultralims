@@ -67,7 +67,9 @@ config:
 
 pvc:
   enabled: true
+  # TODO: trocar para array
   accessMode: ReadWriteMany
+  volumeName: ""
   storage:
     size: 10Gi
     className: ""
